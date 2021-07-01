@@ -2,6 +2,7 @@
 import pandas as pd
 import numpy as np
 import datetime as dt
+from datetime import datetime
 
 # Import sqlalchemy and related content
 import sqlalchemy
@@ -54,7 +55,18 @@ def home():
 # precipitation
 @app.route("/api/v1.0/precipitation")
 def prcp():
-    return('Placeholder')
+    # Create our session (link) from Python to the DB
+    session = Session(engine)
+
+    # Calculate the date 1 year ago from the last data point in the database
+    date_12_mnth_earlier = datetime.strptime(max(session.query(measurement.date))[0], '%Y-%m-%d') - dt.timedelta(365)
+
+    # Save the query results as a Pandas DataFrame and set the index to the date column
+    climate_dic = session.query(measurement.date, measurement.prcp).filter(measurement.date>=date_12_mnth_earlier).all()
+    
+    session.close()
+    
+    return jsonify(dict(climate_dic))
 
 @app.route("/api/v1.0/stations")
 def stn():
@@ -75,3 +87,5 @@ def strt_end():
 # Run app
 if __name__ == "__main__":
     app.run(debug=True)
+
+
