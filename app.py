@@ -64,13 +64,23 @@ def prcp():
     # Save the query results as a Pandas DataFrame and set the index to the date column
     climate_dic = session.query(measurement.date, measurement.prcp).filter(measurement.date>=date_12_mnth_earlier).all()
     
+    # Close session after pulling data
     session.close()
     
     return jsonify(dict(climate_dic))
 
 @app.route("/api/v1.0/stations")
 def stn():
-    return('Placeholder')
+    # Create our session (link) from Python to the DB
+    session = Session(engine)
+
+    # Calculate the date 1 year ago from the last data point in the database
+    stations_list = session.query(station.station).distinct().all()
+    
+    # Close session after pulling data
+    session.close()
+    
+    return jsonify(dict(stations_list))
 
 @app.route("/api/v1.0/tobs")
 def tobs():
