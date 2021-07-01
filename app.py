@@ -79,12 +79,28 @@ def stn():
     
     # Close session after pulling data
     session.close()
-    
-    return jsonify(dict(stations_list))
+
+    # Flatten the list using numpu ravel f-n  
+    return jsonify(list(np.ravel(stations_list)))
 
 @app.route("/api/v1.0/tobs")
 def tobs():
-    return('Placeholder')
+    # Create our session (link) from Python to the DB
+    session = Session(engine)
+
+    # Calculate the date 1 year ago from the last data point in the database
+    date_12_mnth_earlier = datetime.strptime(max(session.query(measurement.date))[0], '%Y-%m-%d') - dt.timedelta(365)
+
+    # Save the query results as a Pandas DataFrame and set the index to the date column
+    climate_dic = session.query(measurement.date, measurement.tobs).filter(measurement.date>=date_12_mnth_earlier).filter(measurement.station == 'USC00519281').all()
+    climate_df= pd.DataFrame(climate_dic)
+
+    temp_output=climate_df['tobs']
+
+    # Close session after pulling data
+    session.close()
+    
+    return jsonify(dict(temp_output))
 
 @app.route("/api/v1.0/<start>")
 def strt():
